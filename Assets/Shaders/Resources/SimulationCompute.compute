@@ -1,0 +1,372 @@
+﻿#pragma kernel CSAdvection
+#pragma kernel CSDivergence
+#pragma kernel CSJacobi
+#pragma kernel CSProjection
+#pragma kernel CSVorticity
+#pragma kernel CSVorticityConfinement
+
+#define THREADGROUP_X 16
+#define THREADGROUP_Y 16
+
+texture2D<float> inComponentTexture; // advection
+texture2D<float2> inVelocityTexture; // advection
+
+texture2D<float> inDivergenceTexture;
+texture2D<float> inPressureTexture;
+texture2D<float> inVorticityTexture;
+texture2D<float4> colliderTexture;
+RWTexture2D<float> outComponentTexture;
+RWTexture2D<float2> outVelocityTexture;
+RWTexture2D<float> outDivergenceTexture;
+RWTexture2D<float> outPressureTexture;
+RWTexture2D<float> outVorticityTexture;
+
+float2 invTextureSize;
+float deltaTime;
+float spawnedDensity;
+float spawnRadius;
+float2 spawnPosition;
+float2 spawnedVelocity;
+float2 textureSize;
+float vorticityIntensity;
+float vorticityAttenuationByDensity;
+float vorticityAttenuationByVelocity;
+float densityAttenuation;
+float velocityAttenuation;
+int horizontalBorder;
+int verticalBorder;
+float injectedDivergence;
+bool useColliderTexture;
+float2 constantVelocity;
+float injectFromVorticity;
+float injectFromPressure;
+float injectFromDivergence;
+
+float time;
+float noiseScale;
+float noiseAnimationSpeed;
+float densityAttenuationNoise;
+float constantVelocityNoise;
+float maxDensity;
+float noiseInjectionIntensity;
+float noiseInjectionScale;
+float noiseInjectionAnimationSpeed;
+
+#include "noises.cginc"
+
+#define BORDER_BLOCKING 0
+#define BORDER_WRAPPING 1
+#define BORDER_OPEN 2
+
+SamplerState _LinearClamp;
+SamplerState sampler_inComponentTexture;
+
+float GetCollision(uint2 i) 
+{
+	float2 uv = (float2(i.xy) + float2(0.5, 0.5)) * invTextureSize;
+	float collider = 0.0;
+	if (useColliderTexture)
+		collider = step(0.5f, colliderTexture.SampleLevel(_LinearClamp, uv, 0.0f).r);
+
+	return collider;
+}
+
+[numthreads(THREADGROUP_X, THREADGROUP_Y, 1)]
+void CSAdvection(uint3 id : SV_DispatchThreadID) // prend la matière et la déplace en utilisant la vélocité, on sauve le tout dans les outTexture pour les étapes next
+{
+	float2 velocity = inVelocityTexture[id.xy]; // vitesse locale
+	float nonCollidingMask = (1.0 - GetCollision(id.xy));
+	velocity *= nonCollidingMask;
+	float2 uv = (float2(id.xy) + float2(0.5, 0.5)) * invTextureSize - velocity * deltaTime;
+	float noise = Perlin3D(float3(uv*noiseScale, time*noiseAnimationSpeed));
+
+	float injectionNoise = Perlin3D(float3(uv * noiseInjectionScale, time * noiseInjectionAnimationSpeed + uv.x * 10.0 + uv.y * 13.0));
+
+	float advectedData = inComponentTexture.SampleLevel(sampler_inComponentTexture, uv, 0.0f);
+	float2 advectedVelocity = inVelocityTexture.SampleLevel(sampler_inComponentTexture, uv, 0.0f);
+
+	if (((horizontalBorder == BORDER_OPEN) && ((uv.x < 0.0f) || (uv.x >= 1.0f))) || 
+		((verticalBorder == BORDER_OPEN) && ((uv.y < 0.0f) || (uv.y >= 1.0f))))
+	{
+		advectedData = 0.0f;
+		advectedVelocity = 0.0.xx;
+	}
+
+	advectedData *= (1.0 - densityAttenuation * deltaTime * clamp(1.0 + (noise - 0.5) *densityAttenuationNoise, 0.0, 2.0));
+	advectedVelocity *= (1.0 - velocityAttenuation * deltaTime);
+
+	float spawnMask = smoothstep(spawnRadius, spawnRadius * 0.5, length(uv - spawnPosition));
+	float spawnData = spawnMask * spawnedDensity;
+	float2 spawnVelocity = spawnMask * spawnedVelocity;
+
+	advectedData += spawnData;
+	float noiseWeight = saturate((injectionNoise - 0.9f)*10.0f);
+	advectedData += noiseInjectionIntensity * noiseWeight;
+	advectedVelocity += spawnVelocity + constantVelocity * deltaTime * lerp(1.0, noise-0.25, constantVelocityNoise); // adding external forces (noise / wind)
+
+	advectedData *= nonCollidingMask;
+	advectedVelocity *= nonCollidingMask;
+
+	if (injectFromVorticity > 0.0)
+	{
+		advectedData += injectFromVorticity * abs(inVorticityTexture[id.xy]);
+	}
+	if (injectFromPressure> 0.0)
+	{
+		advectedData += injectFromPressure * max(0.0f, inPressureTexture[id.xy]);
+	}
+	if (injectFromDivergence > 0.0)
+	{
+		advectedData += injectFromDivergence * abs(inDivergenceTexture[id.xy]);
+	}
+
+	advectedData = min(advectedData, maxDensity);
+	outComponentTexture[id.xy] = advectedData;
+	outVelocityTexture[id.xy] = advectedVelocity;
+}
+
+[numthreads(THREADGROUP_X, THREADGROUP_Y, 1)]
+void CSDivergence(uint3 id : SV_DispatchThreadID)
+{
+	// fait moyenne des 4 dir de pixels voisins pour chopper la direction globale (savoir si la pression vient vers toi ou s'en va)
+	// dans le cas d'une rivière qui s'écoule, divergence est nulle car autant d'eau s'en va qu'il n'en vient s'il n'y a pas de pression ajoutée par la brush
+	// divergence positive : matière veut partir de l'emplacement uv, négative il en vient vers cet emplacement 
+
+	float vxm, vxp, vym, vyp;
+
+	switch (horizontalBorder)
+	{
+	case BORDER_BLOCKING:
+	case BORDER_OPEN:
+		vxm = inVelocityTexture[uint2(max(0, id.x - 1), id.y)].x;
+		vxp = inVelocityTexture[uint2(min(textureSize.x - 1, id.x + 1), id.y)].x;
+		break;
+	case BORDER_WRAPPING:
+		vxm = inVelocityTexture[uint2((id.x + textureSize.x - 1) % textureSize.x, id.y)].x;
+		vxp = inVelocityTexture[uint2((id.x + 1) % textureSize.x, id.y)].x;
+		break;
+	}
+
+	switch (verticalBorder)
+	{
+	case BORDER_BLOCKING:
+	case BORDER_OPEN:
+		vym = inVelocityTexture[uint2(id.x, max(0, id.y - 1))].y;
+		vyp = inVelocityTexture[uint2(id.x, min(textureSize.y - 1, id.y + 1))].y;
+		break;
+	case BORDER_WRAPPING:
+		vym = inVelocityTexture[uint2(id.x, (id.y + textureSize.y - 1) % textureSize.y)].y;
+		vyp = inVelocityTexture[uint2(id.x, (id.y + 1) % textureSize.y)].y;
+		break;
+	}
+
+	float divergence = (vxp - vxm + vyp - vym) * 0.5f;
+
+	float2 uv = (float2(id.xy) + 0.5.xx) * invTextureSize;
+	float spawnMask = smoothstep(spawnRadius, spawnRadius*0.5, length(uv - spawnPosition));
+	divergence += spawnMask * injectedDivergence;
+
+	outDivergenceTexture[id.xy] = divergence;
+	outPressureTexture[id.xy] = 0.0f;
+}
+
+[numthreads(THREADGROUP_X, THREADGROUP_Y, 1)]
+void CSJacobi(uint3 id : SV_DispatchThreadID)
+{
+// tente de répartir la pression pour réinitialiser tout
+	float pxm, pxp, pym, pyp;
+
+	switch (horizontalBorder) {
+	case BORDER_BLOCKING:
+		pxm = inPressureTexture[uint2(max(0, id.x - 1), id.y)];
+		pxp = inPressureTexture[uint2(min(textureSize.x - 1, id.x + 1), id.y)];
+		break;
+	case BORDER_WRAPPING:
+		pxm = inPressureTexture[uint2((id.x + textureSize.x - 1) % textureSize.x, id.y)];
+		pxp = inPressureTexture[uint2((id.x + 1) % textureSize.x, id.y)];
+		break;
+	case BORDER_OPEN:
+		pxm = inPressureTexture[uint2(id.x - 1, id.y)];
+		pxp = inPressureTexture[uint2(id.x + 1, id.y)];
+		break;
+	}
+
+	switch (verticalBorder) {
+	case BORDER_BLOCKING:
+		pym = inPressureTexture[uint2(id.x, max(0, id.y - 1))];
+		pyp = inPressureTexture[uint2(id.x, min(textureSize.y - 1, id.y + 1))];
+		break;
+	case BORDER_WRAPPING:
+		pym = inPressureTexture[uint2(id.x, (id.y + textureSize.y - 1) % textureSize.y)];
+		pyp = inPressureTexture[uint2(id.x, (id.y + 1) % textureSize.y)];
+		break;
+	case BORDER_OPEN:
+		pym = inPressureTexture[uint2(id.x, id.y - 1)];
+		pyp = inPressureTexture[uint2(id.x, id.y + 1)];
+		break;
+	}
+
+	float pressure = pxm + pxp + pym + pyp;
+	float divergence = inDivergenceTexture[id.xy];
+
+	outPressureTexture[id.xy] = (pressure - divergence) * 0.25; // on essaie d'avoir la pression qui annule la divergence
+}
+
+bool isHorizontalBorder(uint2 i)
+{
+	return ((i.x <= 0.0) || (i.x >= (textureSize.x - 1.0)));
+}
+
+bool isVerticalBorder(uint2 i)
+{
+	return ((i.y <= 0.0) || (i.y >= (textureSize.y - 1.0)));
+}
+
+bool isBorder(uint2 i)
+{
+	bool border = false;
+
+	if (horizontalBorder == BORDER_BLOCKING)
+		border = isHorizontalBorder(i);
+
+	if (verticalBorder == BORDER_BLOCKING)
+		border = border || isVerticalBorder(i);
+
+	return border;
+}
+
+[numthreads(THREADGROUP_X, THREADGROUP_Y, 1)]
+void CSProjection(uint3 id : SV_DispatchThreadID)
+{
+// lit dans la texture de pression, lit dans la vélocité puis écrit dans cette vélocité
+// tente de s'éloigner vers l'endroit ou y a le moins de pression
+// ex : eau pousse du bas vers le haut, la coordonnée uv qui se prend tout le flux de l'eau va s'éloigner horizontalement (ou y a pas de press)
+	float pxm, pxp, pym, pyp;
+
+	switch (horizontalBorder) {
+	case BORDER_BLOCKING:
+	case BORDER_OPEN:
+		pxm = inPressureTexture[uint2(max(0, id.x - 1), id.y)];
+		pxp = inPressureTexture[uint2(min(textureSize.x - 1, id.x + 1), id.y)];
+		break;
+	case BORDER_WRAPPING:
+		pxm = inPressureTexture[uint2((id.x + textureSize.x - 1) % textureSize.x, id.y)];
+		pxp = inPressureTexture[uint2((id.x + 1) % textureSize.x, id.y)];
+		break;
+	}
+
+	switch (verticalBorder)
+	{
+	case BORDER_BLOCKING:
+	case BORDER_OPEN:
+		pym = inPressureTexture[uint2(id.x, max(0, id.y - 1))];
+		pyp = inPressureTexture[uint2(id.x, min(textureSize.y - 1, id.y + 1))];
+		break;
+	case BORDER_WRAPPING:
+		pym = inPressureTexture[uint2(id.x, (id.y + textureSize.y - 1) % textureSize.y)];
+		pyp = inPressureTexture[uint2(id.x, (id.y + 1) % textureSize.y)];
+		break;
+	}
+
+	float2 velocity = inVelocityTexture[id.xy];
+	float2 gradPressure = float2(pxp - pxm, pyp - pym) * 0.5f;
+
+	if ((horizontalBorder == BORDER_OPEN) && isHorizontalBorder(id))
+		gradPressure.x = 0.0f;
+
+	if ((verticalBorder == BORDER_OPEN) && isVerticalBorder(id))
+		gradPressure.y = 0.0f;
+
+	velocity -= gradPressure;
+	velocity *= isBorder(id.xy) ? 0.0f : 1.0f; // si y a un bord, on force la vélocité a 0, lle fluide ne PEUT PAS aller par là et doit trouver un autre chemin ou renvoyer la press
+
+	outVelocityTexture[id.xy] = velocity;
+}
+
+
+[numthreads(THREADGROUP_X, THREADGROUP_Y, 1)]
+void CSVorticity(uint3 id : SV_DispatchThreadID)
+{
+	float vxm, vxp, vym, vyp;
+
+	switch (horizontalBorder) 
+	{
+	case BORDER_BLOCKING:
+	case BORDER_OPEN:
+		vxm = inVelocityTexture[uint2(max(0, id.x - 1), id.y)].y;
+		vxp = inVelocityTexture[uint2(min(textureSize.x - 1, id.x + 1), id.y)].y;
+		break;
+	case BORDER_WRAPPING:
+		vxm = inVelocityTexture[uint2((id.x + textureSize.x - 1) % textureSize.x, id.y)].y;
+		vxp = inVelocityTexture[uint2((id.x + 1) % textureSize.x, id.y)].y;
+		break;
+	}
+
+	switch (verticalBorder) 
+	{
+	case BORDER_BLOCKING:
+	case BORDER_OPEN:
+		vym = inVelocityTexture[uint2(id.x, max(0, id.y - 1))].x;
+		vyp = inVelocityTexture[uint2(id.x, min(textureSize.y - 1, id.y + 1))].x;
+		break;
+	case BORDER_WRAPPING:
+		vym = inVelocityTexture[uint2(id.x, (id.y + textureSize.y - 1) % textureSize.y)].x;
+		vyp = inVelocityTexture[uint2(id.x, (id.y + 1) % textureSize.y)].x;
+		break;
+	}
+
+	float vorticity = vyp - vym + vxm - vxp;
+
+	outVorticityTexture[id.xy] = vorticity;
+}
+
+[numthreads(THREADGROUP_X, THREADGROUP_Y, 1)]
+void CSVorticityConfinement(uint3 id : SV_DispatchThreadID)
+{
+	float data = inComponentTexture[id.xy];
+	float2 velocity = inVelocityTexture[id.xy];
+	float velocityMagnitude = length(velocity);
+	
+	float vxm, vxp, vym, vyp;
+
+	switch (horizontalBorder) 
+	{
+	case BORDER_BLOCKING:
+	case BORDER_OPEN:
+		vxm = inVorticityTexture[uint2(max(0, id.x - 1), id.y)];
+		vxp = inVorticityTexture[uint2(min(textureSize.x - 1, id.x + 1), id.y)];
+		break;
+	case BORDER_WRAPPING:
+		vxm = inVorticityTexture[uint2((id.x + textureSize.x - 1) % textureSize.x, id.y)];
+		vxp = inVorticityTexture[uint2((id.x + 1) % textureSize.x, id.y)];
+		break;
+	}
+
+	switch (verticalBorder) 
+	{
+	case BORDER_BLOCKING:
+	case BORDER_OPEN:
+		vym = inVorticityTexture[uint2(id.x, max(0, id.y - 1))];
+		vyp = inVorticityTexture[uint2(id.x, min(textureSize.y - 1, id.y + 1))];
+		break;
+	case BORDER_WRAPPING:
+		vym = inVorticityTexture[uint2(id.x, (id.y + textureSize.y - 1) % textureSize.y)];
+		vyp = inVorticityTexture[uint2(id.x, (id.y + 1) % textureSize.y)];
+		break;
+	}
+
+	float2 extraVelocity = float2(abs(vym) - abs(vyp), abs(vxp) - abs(vxm));
+	float vorticity = inVorticityTexture[id.xy];
+	float extraVelocityMagnitude = length(extraVelocity) + 1.0e-06;
+	
+	extraVelocity *= vorticity / extraVelocityMagnitude;
+	
+	extraVelocity *= (isHorizontalBorder(id) || isVerticalBorder(id)) ? 0.0f : 1.0f;
+
+	extraVelocity *= lerp(1.0f, min(1.0, data), vorticityAttenuationByDensity);
+	extraVelocity *= lerp(1.0f, min(1.0, velocityMagnitude), vorticityAttenuationByVelocity);
+
+	velocity += extraVelocity * vorticityIntensity;
+
+	outVelocityTexture[id.xy] = velocity;
+}

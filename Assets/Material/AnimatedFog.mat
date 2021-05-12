@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 6
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: AnimatedFog
+  m_Shader: {fileID: 4800000, guid: 2ac2305e381bd0b4d99abcd3f247502e, type: 3}
+  m_ShaderKeywords: 
+  m_LightmapFlags: 0
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _TextureSample0:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Floats:
+    - _Maxsimulationdensity: 7.12
+    - _Shadowdensity: 69.7
+    - _Smokedensity: 79.5
+    - _Smokesmoothness: 0.376
+    - _Volumetricthickness: 0.0735
+    - __dirty: 0
+    m_Colors:
+    - _Color0: {r: 0.7169812, g: 0.7169812, b: 0.7169812, a: 0}
+    - _Highcolor: {r: 0.764151, g: 0.764151, b: 0.764151, a: 0}
+    - _Lowcolor: {r: 1, g: 0, b: 0, a: 0}
+    - _Shadowcolor: {r: 0.7924528, g: 0.63956374, b: 0.15325737, a: 0}
+    - _Smokecolor: {r: 0.764151, g: 0.764151, b: 0.764151, a: 0}

@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class FluidSimulation : MonoBehaviour
 {
@@ -39,7 +37,7 @@ public class FluidSimulation : MonoBehaviour
     [Range(0.0f, 1.0f)] public float NoiseInjectionIntensity = 0.5f;
 
     [Header("Forces")]
-    [Range(-15.0f, 15.0f)] public float VelocityBoost = 2.0f;
+    [Range(-15.0f, 15.0f)] public float VelocityBoost = 2.0f; // mouse movement
     public Vector2 ConstantVelocity = Vector2.zero;
 
     [Header("Vorticity")]
@@ -52,8 +50,8 @@ public class FluidSimulation : MonoBehaviour
     public Texture Collider;
 
     #region Private
-    SwappableRenderTexture componentTexture; // donne la quantité de smoke
-    SwappableRenderTexture velocityTexture;
+    public SwappableRenderTexture velocityTexture;
+    SwappableRenderTexture componentTexture; // donne la quantité de liquide
     SwappableRenderTexture pressureTexture;
     RenderTexture divergenceTexture; // détecte les dépressions / pressions sous forme de positif / négatif => calcul de l'erreur
     RenderTexture vorticityTexture;

@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: DisplacementTerrain
-  m_Shader: {fileID: 4800000, guid: c70fce12b8f494f4d8d8e4219eced7ee, type: 3}
+  m_Name: Pond
+  m_Shader: {fileID: 4800000, guid: 02131d65601baa942b4ef5732a6c08c6, type: 3}
   m_ShaderKeywords: 
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -19,20 +19,8 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
-    - _Heightmap:
+    - _TextureSample1:
         m_Texture: {fileID: 2800000, guid: 295b997eccbc9d5469dacd0b1bc7f615, type: 3}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _New_Graph_basecolor:
-        m_Texture: {fileID: 2800000, guid: 6834ad1b24541f544bd551d08ddfc16f, type: 3}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _New_Graph_roughness:
-        m_Texture: {fileID: 2800000, guid: cd1e7afc1e10c7942bb84aaeccfeb816, type: 3}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _Normalmap:
-        m_Texture: {fileID: 2800000, guid: 715c173adf5d3e0478954da6d201fc6c, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _texcoord:
@@ -40,9 +28,12 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
+    - _Depth_Distance: 25
     - _EdgeLength: 15
-    - _Miplevel: 2.37
-    - _Terrainheight: 0.99
-    - _TessValue: 32
+    - _Float0: 25
+    - _MovementAmplitude: 0.2
+    - _Opacity: 0.48
+    - _TessValue: 25
     - __dirty: 0
-    m_Colors: []
+    m_Colors:
+    - _WaterColor: {r: 0.6839622, g: 0.967977, b: 1, a: 0}

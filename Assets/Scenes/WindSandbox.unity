@@ -9055,12 +9055,18 @@ MonoBehaviour:
   SpawnRadius: 0.1816
   DivergenceIntensity: -0.242
   MaxDensity: 5
+  InjectFromVorticity: 0
+  InjectFromDivergence: 0
+  InjectFromPressure: 0
   NoiseScale: 25
   NoiseAnimationSpeed: 1
-  DensityAttenuationNoise: 0.5
-  ConstantVelocityNoise: 0.5
+  DensityAttenuationNoise: 5
+  ConstantVelocityNoise: 1.22
+  NoiseInjectionScale: 1
+  NoiseInjectionAnimationSpeed: 1
+  NoiseInjectionIntensity: 0.5
   VelocityBoost: 11.1
-  ConstantVelocity: {x: 0, y: 0}
+  ConstantVelocity: {x: 1, y: 0}
   VorticityIntensity: 0.336
   VorticityAttenuationByDensity: 0.376
   VorticityAttenuationByVelocity: 0.5

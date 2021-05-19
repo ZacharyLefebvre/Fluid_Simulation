@@ -55,7 +55,7 @@ Material:
     - _Wavesflowspeed: 1
     - _Wavesscale: 1.347
     - _Wavestiling: 4
-    - __dirty: 1
+    - __dirty: 0
     m_Colors:
     - _Foamcolor: {r: 1, g: 1, b: 1, a: 0}
     - _Watercolor: {r: 0.2055892, g: 0.5338864, b: 0.7924528, a: 0}

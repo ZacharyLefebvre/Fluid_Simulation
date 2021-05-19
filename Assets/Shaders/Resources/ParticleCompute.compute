@@ -27,6 +27,7 @@ float hash(float2 p)
 void CSMoveParticles (uint3 id : SV_DispatchThreadID)
 {
     float3 particle = particleTextureRead[id.xy];
+
     float2 velocity = velocityTexture.SampleLevel(_LinearClamp, particle.xy, 0.0f);
 
     float2 pos = particle.xy + velocity * deltatime;
@@ -44,5 +45,5 @@ void CSInitializeParticles (uint3 id : SV_DispatchThreadID)
 {
     float particleId = (float)oneDimension(id);
     float2 pos = float2(hash((particleId + (float)id.x) * seed), hash((particleId + id.y) * seed));
-    particleTextureWrite[id.xy] = float3((pos * 2.0 - 1.0) * 0.22 + 0.5.xx, 0.25);
+    particleTextureWrite[id.xy] = float3((pos * 2.0 - 1.0) * 0.22 + 0.5.xx, 0.0225);
 }

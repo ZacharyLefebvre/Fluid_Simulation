@@ -9,7 +9,7 @@ Material:
   m_PrefabAsset: {fileID: 0}
   m_Name: Nenuphar
   m_Shader: {fileID: 4800000, guid: f16d5b30c56ed9548ab5b9b79acb94d2, type: 3}
-  m_ShaderKeywords: 
+  m_ShaderKeywords: _VERTEXOFFSET_ON
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 1
   m_DoubleSidedGI: 0
@@ -19,6 +19,10 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
+    - _WaterRipples:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _particleTexture:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -28,11 +32,16 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
-    - _HeightAmplitude: 0.2
+    - _HeightAmplitude: 0.3
     - _Id: 36
     - _ParticleTextureSize: 64
     - _PondScale: 20
+    - _RippleSize1: 0.25
+    - _Sampling: 3
+    - _SmallVerticalOffset: 0.01
     - _Smoothness: 0.71
+    - _VertexOffset: 1
+    - _WaterSize1: 0.4
     - __dirty: 0
     m_Colors:
     - _MainColor: {r: 0.02012577, g: 0.1509434, b: 0, a: 0}

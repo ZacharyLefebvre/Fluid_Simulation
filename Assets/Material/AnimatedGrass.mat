@@ -37,7 +37,7 @@ Material:
     - _TransShadow: 0.653
     - _Translucency: 35.2
     - _Transmission: 1
-    - __dirty: 0
+    - __dirty: 1
     m_Colors:
     - _Primarycolor: {r: 0.15639395, g: 0.794, b: 0.26466662, a: 0}
     - _Secondarycolor: {r: 0.75504506, g: 0.986, b: 0.15989186, a: 0}

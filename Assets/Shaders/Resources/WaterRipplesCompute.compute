@@ -1,0 +1,31 @@
+﻿#pragma kernel CSRipple
+
+Texture2D<float> waterRippleCollision;
+Texture2D<float> waterRippleRead;
+RWTexture2D<float> waterRippleWrite;
+
+float2 uvHit, simulationSize;
+float injectionForce, injectionRadius, dampening;
+
+[numthreads(16,16,1)]
+void CSRipple (uint3 id : SV_DispatchThreadID)
+{
+    // Get neighbours
+    float previousLeft = waterRippleRead[id.xy + uint2(-1, 0)] * (1.0 - waterRippleCollision[id.xy + uint2(-1, 0)]);
+    float previousRight = waterRippleRead[id.xy + uint2(1, 0)] * (1.0 - waterRippleCollision[id.xy + uint2(1, 0)]);
+    float previousDown = waterRippleRead[id.xy + uint2(0, -1)] * (1.0 - waterRippleCollision[id.xy + uint2(0, -1)]);
+    float previousUp =    waterRippleRead[id.xy + uint2(0, 1)] * (1.0 - waterRippleCollision[id.xy + uint2(0, 1)]);
+    
+    // Get current
+    float currentCollision = (1.0 - waterRippleCollision[id.xy]);
+    float current =  waterRippleWrite[id.xy] * currentCollision; // must read in write texture
+    
+    // Calculate new value
+    float newValue = (previousLeft + previousRight + previousUp + previousDown) * 0.5 - current;
+
+    // Add injection
+    float injectMask = step(saturate(length((float2)id.xy - (uvHit * simulationSize)) / simulationSize), injectionRadius) * injectionForce * currentCollision;
+    
+    // Register result
+    waterRippleWrite[id.xy] = (newValue * dampening) + injectMask;
+}

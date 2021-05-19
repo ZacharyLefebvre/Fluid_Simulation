@@ -59,17 +59,17 @@ public class FluidSimulation : MonoBehaviour
     Material meshMaterial;
     Renderer meshRenderer;
 
-    uint ThreadGroupSizeX;
-    uint ThreadGroupSizeY;
-    uint ThreadGroupSizeZ;
+    [HideInInspector] public uint ThreadGroupSizeX;
+    [HideInInspector] public uint ThreadGroupSizeY;
+    [HideInInspector] public uint ThreadGroupSizeZ;
     Vector2 invTextureSize;
     Vector2 textureSize;
     Vector2 previousHitCoord = Vector2.zero;
     #endregion
 
     #region Const
-    const int simulationSizeX = 512;
-    const int simulationSizeY = 512;
+    [HideInInspector] public int simulationSizeX = 512;
+    [HideInInspector] public int simulationSizeY = 512;
     #endregion
 
     #region UnityFunctions

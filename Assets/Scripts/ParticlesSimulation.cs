@@ -22,11 +22,11 @@ public class ParticlesSimulation : MonoBehaviour
     private uint ThreadGroupSizeY;
     private uint ThreadGroupSizeZ;
 
-    const int simulationSizeX = 64;
-    const int simulationSizeY = 64;
+    public const int simulationSizeX = 64;
+    public const int simulationSizeY = 64;
 
     #region Unity Functions
-    private void Start()
+    private void Awake()
     {
         particleAmountSlider.onValueChanged.AddListener(UpdateParticleAmount);
         Initialize();

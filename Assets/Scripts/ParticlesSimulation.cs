@@ -60,11 +60,11 @@ public class ParticlesSimulation : MonoBehaviour
         for (int i = 0; i < MaxParticlesCount; i++)
         {
             nenupharArray[i] = Instantiate(nenupharPrefab, nenupharSpawn);
-            // nenupharArray[i].GetComponent<Renderer>().material.SetInt("_Id", i);
             MaterialPropertyBlock propertyBlock = new MaterialPropertyBlock();
-            propertyBlock.SetInt("_Id", i);
+            propertyBlock.SetFloat("_Id", (float)i);
+            propertyBlock.SetFloat("_Rotation", Random.value * 2.0f * Mathf.PI);
+            propertyBlock.SetFloat("_ActiveParticlesCount", activeParticlesCount);
             nenupharArray[i].GetComponent<Renderer>().SetPropertyBlock(propertyBlock);
-
             nenupharArray[i].SetActive(i < activeParticlesCount);
         }
 
@@ -73,23 +73,36 @@ public class ParticlesSimulation : MonoBehaviour
 
         particlesCompute.SetInt("seed", (int)(Random.value * 26852.41684));
 
-        particlesCompute.SetTexture(0, "colliderTexture", colliderTexture);
+        ComputeBuffer randomBuffer = new ComputeBuffer(simulationSizeX * simulationSizeY, sizeof(float) * 2);
+        Vector2[] randomData = new Vector2[simulationSizeX * simulationSizeY];
+        for (int i = 0; i < randomData.Length; i++)
+        {
+            //randomData[i] = new Vector2((float)(i % 64) / 64f, Mathf.Floor(((float)i / 64f)) / 64f);
+            randomData[i] = new Vector2(Random.value, Random.value);
+        }
+        randomBuffer.SetData(randomData);
+
+        particlesCompute.SetInts("textureSize", new int[] { (int)textureSize.x, (int)textureSize.y });
+        particlesCompute.SetBuffer(1, "randomBuffer", randomBuffer);
         particlesCompute.SetTexture(1, "particleTextureWrite", particleTexture.Write);
         particlesCompute.Dispatch(1, Mathf.CeilToInt((float)simulationSizeX / (float)ThreadGroupSizeX), Mathf.CeilToInt((float)simulationSizeY / (float)ThreadGroupSizeY), 1);
         particleTexture.Swap();
+        randomBuffer.Release();
     }
 
     private void Simulate()
     {
         particlesCompute.SetFloat("deltatime", Time.deltaTime);
+        particlesCompute.SetInts("textureSize", new int[] { (int)textureSize.x, (int)textureSize.y });
+
+        // Move Particles Kernel
         particlesCompute.SetTexture(0, "particleTextureRead", particleTexture.Read);
         particlesCompute.SetTexture(0, "particleTextureWrite", particleTexture.Write);
         particlesCompute.SetTexture(0, "velocityTexture", mainSimulationScript.velocityTexture.Read);
+        particlesCompute.SetTexture(0, "colliderTexture", colliderTexture);
         
         particlesCompute.Dispatch(0, Mathf.CeilToInt((float)simulationSizeX / (float)ThreadGroupSizeX), Mathf.CeilToInt((float)simulationSizeY / (float)ThreadGroupSizeY), 1);
         particleTexture.Swap();
-
-        // Move Particles Kernel
 
         Shader.SetGlobalVector("particleInvTextureSize", particleInvTextureSize);
         Shader.SetGlobalTexture("particleTexture", particleTexture.Read);

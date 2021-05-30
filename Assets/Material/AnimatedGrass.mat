@@ -25,10 +25,12 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Floats:
     - _Flattening: 0.87
+    - _Float0: 1
     - _MaxVelocityMagnitude: 0.5
-    - _NoiseScale: 17.72
+    - _NoiseColorScale: 17.72
+    - _NoiseScale: 0.78
     - _Smoothness: 0.482
-    - _Stretching: 0.87
+    - _Stretching: 0.09
     - _Trans: 1
     - _TransAmbient: 0.46
     - _TransDirect: 0.531
@@ -37,7 +39,9 @@ Material:
     - _TransShadow: 0.653
     - _Translucency: 35.2
     - _Transmission: 1
-    - __dirty: 1
+    - __dirty: 0
     m_Colors:
+    - _NoiseDir: {r: 0.5, g: 0, b: 0.5, a: 0}
+    - _NoiseStrength: {r: 0.25, g: 0.25, b: 0, a: 0}
     - _Primarycolor: {r: 0.15639395, g: 0.794, b: 0.26466662, a: 0}
     - _Secondarycolor: {r: 0.75504506, g: 0.986, b: 0.15989186, a: 0}

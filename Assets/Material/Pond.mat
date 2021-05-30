@@ -34,9 +34,9 @@ Material:
     - _MovementAmplitude: 0.2
     - _MovementGlobalAmplitude: 0.2
     - _Opacity: 0.48
-    - _RippleSize: 0.033
+    - _RippleSize: 0.025
     - _TessValue: 25
-    - _WaterSize: 0.4
+    - _WaterSize: 0.33
     - __dirty: 0
     m_Colors:
     - _WaterColor: {r: 0.6839622, g: 0.967977, b: 1, a: 0}

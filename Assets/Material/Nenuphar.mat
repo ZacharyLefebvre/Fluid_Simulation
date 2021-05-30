@@ -32,16 +32,21 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
-    - _HeightAmplitude: 0.3
-    - _Id: 36
+    - _ActiveParticleCount: 100
+    - _Float0: 6.28
+    - _HeightAmplitude: 0.2
+    - _Id: 0
     - _ParticleTextureSize: 64
     - _PondScale: 20
-    - _RippleSize1: 0.25
-    - _Sampling: 3
-    - _SmallVerticalOffset: 0.01
-    - _Smoothness: 0.71
+    - _RippleSize: 0.025
+    - _RippleSize1: 0.025
+    - _Rotation: 0
+    - _Sampling: 12
+    - _SmallVerticalOffset: 0.75
+    - _Smoothness: 0
     - _VertexOffset: 1
-    - _WaterSize1: 0.4
-    - __dirty: 0
+    - _WaterSize: 0.33
+    - _WaterSize1: 0.33
+    - __dirty: 1
     m_Colors:
     - _MainColor: {r: 0.02012577, g: 0.1509434, b: 0, a: 0}

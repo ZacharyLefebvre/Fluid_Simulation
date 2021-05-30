@@ -6,7 +6,9 @@ Texture2D<float3> particleTextureRead;
 Texture2D<float2> velocityTexture;
 Texture2D<float> colliderTexture;
 
-uint2 textureSize;
+StructuredBuffer<float2> randomBuffer;
+
+int2 textureSize;
 float deltatime;
 int seed;
 
@@ -15,12 +17,6 @@ SamplerState _LinearClamp;
 uint oneDimension(uint3 id)
 {
     return id.y * (uint)textureSize.x + id.x;
-}
-
-float hash(float2 p)
-{
-    p  = 50.0 * frac(p * 0.3183099 + float2(0.71, 0.113));
-    return frac(p.x * p.y * (p.x + p.y));
 }
 
 [numthreads(8,8,1)]
@@ -35,7 +31,8 @@ void CSMoveParticles (uint3 id : SV_DispatchThreadID)
     
     float collider = colliderTexture.SampleLevel(_LinearClamp, pos, 0.0f);
 
-    if(collider > 0.0) pos = particle.xy;
+    if (collider > 0.0)
+		pos = particle.xy;
 
     particleTextureWrite[id.xy] = float3(pos, particle.z);
 }
@@ -44,6 +41,6 @@ void CSMoveParticles (uint3 id : SV_DispatchThreadID)
 void CSInitializeParticles (uint3 id : SV_DispatchThreadID)
 {
     float particleId = (float)oneDimension(id);
-    float2 pos = float2(hash((particleId + (float)id.x) * seed), hash((particleId + id.y) * seed));
-    particleTextureWrite[id.xy] = float3((pos * 2.0 - 1.0) * 0.22 + 0.5.xx, 0.0225);
+    float2 pos = randomBuffer[particleId];
+    particleTextureWrite[id.xy] = float3((pos * 2.0 - 1.0) * 0.22 + float2(0.5, 0.5), 0.0225);
 }

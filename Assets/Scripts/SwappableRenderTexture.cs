@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[System.Serializable]
 public class SwappableRenderTexture
 {
     /// <summary>
     /// Buffer containing both render textures
     /// </summary>
-    private RenderTexture[] _buffers;
+    [SerializeField] private RenderTexture[] _buffers;
     private int _readID = 0;
     private int _writeID = 1;
 

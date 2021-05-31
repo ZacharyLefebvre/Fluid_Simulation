@@ -19,6 +19,7 @@ public class ParticlesSimulation : MonoBehaviour
     // [SerializeField] private GameObject nenufarPrefab = null;
     [SerializeField] private Texture colliderTexture = null;
     [SerializeField] private Slider particleAmountSlider = null;
+    [SerializeField] private NenupharAmount nenupharAmountScript = null;
 
     private SwappableRenderTexture particleTexture = null;
     private ComputeShader particlesCompute;
@@ -39,6 +40,7 @@ public class ParticlesSimulation : MonoBehaviour
     {
         particleAmountSlider.onValueChanged.AddListener(UpdateParticleAmount);
         Initialize();
+        nenupharAmountScript.UpdateText(activeParticlesCount);
     }
     private void Update()
     {
@@ -69,14 +71,14 @@ public class ParticlesSimulation : MonoBehaviour
         for (int i = 0; i < MaxParticlesCount; i++)
         {
             int nenufarRoll = Random.Range(0, 101);
-            int nenupharVisu = 0;
+            int nenufarVisu = 0;
 
             for (int j = 0; j < nenufarPrefabs.Length; j++)
             {
                 if (nenufarRoll >= nenufarPrefabs[j].proba.x && nenufarRoll <= nenufarPrefabs[j].proba.y)
                 {
                     nenufarArray[i] = Instantiate(nenufarPrefabs[j].prefab, nenupharSpawn);
-                    nenupharVisu = j;
+                    nenufarVisu = j;
                     break;
                 }
                 if (j == nenufarPrefabs.Length - 1)
@@ -88,9 +90,14 @@ public class ParticlesSimulation : MonoBehaviour
             propertyBlock.SetFloat("_Id", (float)i);
             propertyBlock.SetFloat("_Rotation", Random.value * 2.0f * Mathf.PI);
             propertyBlock.SetFloat("_ActiveParticlesCount", activeParticlesCount);
+            propertyBlock.SetFloat("_NenufarIndex", (float)nenufarVisu);
 
-            if (nenupharVisu == 2) // first lotus visu
-                propertyBlock.SetColor("_LotusColor", Random.ColorHSV(0.0f, 1.0f, 0.6f, 1.0f, 0.6f, 1.0f, 1.0f, 1.0f));
+            if (nenufarVisu == 2) // first lotus visu
+            {
+                // Color debug = new Vector4(Random.value, Random.value, Random.value, 1.0f);
+                Color debug = Random.ColorHSV(0.0f, 1.0f, 0.6f, 1.0f, 0.6f, 1.0f, 1.0f, 1.0f);
+                propertyBlock.SetColor("_LotusColor", debug);
+            }
 
             nenufarArray[i].GetComponent<Renderer>().SetPropertyBlock(propertyBlock);
 

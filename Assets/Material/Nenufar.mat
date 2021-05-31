@@ -87,8 +87,10 @@ Material:
     - _GlossyReflections: 1
     - _HeightAmplitude: 0.2
     - _Id: 0
+    - _Int0: 0
     - _Metallic: 0
     - _Mode: 0
+    - _NenufarIndex: 0
     - _NoiseColorScale: 1.82
     - _NoiseColorScale1: 0.44
     - _OcclusionStrength: 1

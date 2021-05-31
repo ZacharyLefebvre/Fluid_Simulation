@@ -8,6 +8,6 @@ public class NenupharMesh : MonoBehaviour
         Mesh mesh = GetComponent<MeshFilter>().sharedMesh;
         mesh.bounds = new Bounds(transform.position, new Vector3(100.0f, 100.0f, 100.0f));
         Mesh instance = (Mesh)Object.Instantiate(mesh);
-        AssetDatabase.CreateAsset(instance, "Assets/Meshes/Lotus_Flower1.mesh");
+        AssetDatabase.CreateAsset(instance, "Assets/Meshes/Lotus_Flower2.mesh");
     }
 }

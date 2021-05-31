@@ -5,7 +5,7 @@ public class WaterRippleSimulation : MonoBehaviour
     [SerializeField] private Texture collisionTexture = null;
     [SerializeField] private float injectionForce = 1;
     [SerializeField, Range(0.0f, 0.1f)] private float injectRadius = 0.01f;
-    [SerializeField, Range(0.0f, 1.0f)] private float dampening = 0.95f;
+    [SerializeField, Range(0.95f, 1.0f)] private float dampening = 0.95f;
     [SerializeField, Range(0, 5)] private int rippleSpeed = 1;
     [SerializeField] private LayerMask raycastLayerMask;
 

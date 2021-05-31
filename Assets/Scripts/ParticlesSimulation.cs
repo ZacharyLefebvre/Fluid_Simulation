@@ -3,17 +3,26 @@ using UnityEngine.UI;
 
 public class ParticlesSimulation : MonoBehaviour
 {
+    [System.Serializable]
+    public class NenufarData
+    {
+        public string name;
+        public GameObject prefab;
+        [MinMax(0, 100, ShowEditRange = true, ShowDebugValues = false)] public Vector2 proba;
+    }
+
     public int MaxParticlesCount => (simulationSizeX * simulationSizeY);
 
     [SerializeField] private FluidSimulation mainSimulationScript = null;
     [SerializeField] private Transform nenupharSpawn = null;
-    [SerializeField] private GameObject nenupharPrefab = null;
+    [SerializeField] private NenufarData[] nenufarPrefabs;
+    // [SerializeField] private GameObject nenufarPrefab = null;
     [SerializeField] private Texture colliderTexture = null;
     [SerializeField] private Slider particleAmountSlider = null;
 
     private SwappableRenderTexture particleTexture = null;
     private ComputeShader particlesCompute;
-    private GameObject[] nenupharArray;
+    private GameObject[] nenufarArray;
 
     private Vector2 textureSize;
     private Vector2 particleInvTextureSize;
@@ -49,7 +58,7 @@ public class ParticlesSimulation : MonoBehaviour
     {
         Camera.main.useOcclusionCulling = false;
 
-        nenupharArray = new GameObject[MaxParticlesCount];
+        nenufarArray = new GameObject[MaxParticlesCount];
         particlesCompute = Resources.Load<ComputeShader>("ParticleCompute");
         particlesCompute.GetKernelThreadGroupSizes(0, out ThreadGroupSizeX, out ThreadGroupSizeY, out ThreadGroupSizeZ);
         textureSize = new Vector2(simulationSizeX, simulationSizeY);
@@ -59,13 +68,33 @@ public class ParticlesSimulation : MonoBehaviour
 
         for (int i = 0; i < MaxParticlesCount; i++)
         {
-            nenupharArray[i] = Instantiate(nenupharPrefab, nenupharSpawn);
+            int nenufarRoll = Random.Range(0, 101);
+            int nenupharVisu = 0;
+
+            for (int j = 0; j < nenufarPrefabs.Length; j++)
+            {
+                if (nenufarRoll >= nenufarPrefabs[j].proba.x && nenufarRoll <= nenufarPrefabs[j].proba.y)
+                {
+                    nenufarArray[i] = Instantiate(nenufarPrefabs[j].prefab, nenupharSpawn);
+                    nenupharVisu = j;
+                    break;
+                }
+                if (j == nenufarPrefabs.Length - 1)
+                    Debug.Log($"no percentage matching this number : {nenufarRoll}");
+            }
+            
+            // nenufarArray[i].transform.position += Vector3.up * (Random.value * 0.1f); // offset to avoid z-fighting
             MaterialPropertyBlock propertyBlock = new MaterialPropertyBlock();
             propertyBlock.SetFloat("_Id", (float)i);
             propertyBlock.SetFloat("_Rotation", Random.value * 2.0f * Mathf.PI);
             propertyBlock.SetFloat("_ActiveParticlesCount", activeParticlesCount);
-            nenupharArray[i].GetComponent<Renderer>().SetPropertyBlock(propertyBlock);
-            nenupharArray[i].SetActive(i < activeParticlesCount);
+
+            if (nenupharVisu == 2) // first lotus visu
+                propertyBlock.SetColor("_LotusColor", Random.ColorHSV(0.0f, 1.0f, 0.6f, 1.0f, 0.6f, 1.0f, 1.0f, 1.0f));
+
+            nenufarArray[i].GetComponent<Renderer>().SetPropertyBlock(propertyBlock);
+
+            nenufarArray[i].SetActive(i < activeParticlesCount);
         }
 
         mainSimulationScript = GetComponent<FluidSimulation>();
@@ -114,10 +143,9 @@ public class ParticlesSimulation : MonoBehaviour
 
         for (int i = 0; i < MaxParticlesCount; i++)
         {
-            nenupharArray[i].SetActive(i < activeParticlesCount);
+            nenufarArray[i].SetActive(i < activeParticlesCount);
         }
     }
 
     #endregion
-
 }

@@ -4,5 +4,8 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/Pond_FluidExam.unity
+    guid: 81e58d122133ce649b6ac8080d07e9db
   m_configObjects: {}

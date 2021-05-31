@@ -3,10 +3,13 @@ guid: c70fce12b8f494f4d8d8e4219eced7ee
 ShaderImporter:
   externalObjects: {}
   defaultTextures:
-  - _New_Graph_basecolor: {fileID: 2800000, guid: 6834ad1b24541f544bd551d08ddfc16f,
-      type: 3}
   - _New_Graph_roughness: {fileID: 2800000, guid: 38f4d96aa2e8b964087f051b0d38cb84,
       type: 3}
+  - _Dirt_Displacement: {fileID: 2800000, guid: d3aae06293862e843a9620a430bd18b1,
+      type: 3}
+  - _New_Graph_basecolor: {fileID: 2800000, guid: 6834ad1b24541f544bd551d08ddfc16f,
+      type: 3}
+  - _Dirt_AO: {fileID: 2800000, guid: 4d144e1838ea46c4998ab8f3b86cf0c8, type: 3}
   nonModifiableTextures: []
   userData: 
   assetBundleName: 

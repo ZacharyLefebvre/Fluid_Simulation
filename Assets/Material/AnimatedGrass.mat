@@ -27,8 +27,8 @@ Material:
     - _Flattening: 0.87
     - _Float0: 1
     - _MaxVelocityMagnitude: 0.5
-    - _NoiseColorScale: 17.72
-    - _NoiseScale: 0.78
+    - _NoiseColorScale: 7.6
+    - _NoiseScale: 0.33
     - _Smoothness: 0.482
     - _Stretching: 0.09
     - _Trans: 1
@@ -42,6 +42,6 @@ Material:
     - __dirty: 0
     m_Colors:
     - _NoiseDir: {r: 0.5, g: 0, b: 0.5, a: 0}
-    - _NoiseStrength: {r: 0.25, g: 0.25, b: 0, a: 0}
-    - _Primarycolor: {r: 0.6576938, g: 0.735849, b: 0.2880918, a: 0}
-    - _Secondarycolor: {r: 0.3383911, g: 0.49056602, b: 0.06710574, a: 0}
+    - _NoiseStrength: {r: 0.125, g: 0.15, b: 0, a: 0}
+    - _Primarycolor: {r: 0.6037736, g: 0.40573734, b: 0.21359916, a: 0}
+    - _Secondarycolor: {r: 0.5188679, g: 0.47560444, b: 0.16398183, a: 0}

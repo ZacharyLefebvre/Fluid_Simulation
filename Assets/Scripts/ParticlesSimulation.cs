@@ -8,7 +8,8 @@ public class ParticlesSimulation : MonoBehaviour
     {
         public string name;
         public GameObject prefab;
-        [MinMax(0, 100, ShowEditRange = true, ShowDebugValues = false)] public Vector2 proba;
+        public int probaMin = 0;
+        public int probaMax = 0;
     }
 
     public int MaxParticlesCount => (simulationSizeX * simulationSizeY);
@@ -75,7 +76,7 @@ public class ParticlesSimulation : MonoBehaviour
 
             for (int j = 0; j < nenufarPrefabs.Length; j++)
             {
-                if (nenufarRoll >= nenufarPrefabs[j].proba.x && nenufarRoll <= nenufarPrefabs[j].proba.y)
+                if (nenufarRoll >= nenufarPrefabs[j].probaMin && nenufarRoll <= nenufarPrefabs[j].probaMax)
                 {
                     nenufarArray[i] = Instantiate(nenufarPrefabs[j].prefab, nenupharSpawn);
                     nenufarVisu = j;

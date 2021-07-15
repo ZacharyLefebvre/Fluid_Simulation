@@ -83,7 +83,7 @@ public class FluidSimulation : MonoBehaviour
         Simulate();
     }
 
-    void OnDisable()
+    private void OnDestroy()
     {
         Uninitialize();
     }
@@ -106,9 +106,44 @@ public class FluidSimulation : MonoBehaviour
         meshRenderer = GetComponent<MeshRenderer>();
         meshMaterial = meshRenderer.material;
     }
-    public void Uninitialize()
-    {
 
+    private void Uninitialize()
+    {
+        componentTexture.Release();
+        velocityTexture.Release();
+        pressureTexture.Release();
+        divergenceTexture.Release();
+        vorticityTexture.Release();
+    }
+
+    public void OnRestart()
+    {
+        Uninitialize();
+        Initialize();
+
+        fluidSimulationCompute.SetTexture(6, "outComponentTexture", componentTexture.Write);
+        fluidSimulationCompute.SetTexture(6, "outVelocityTexture", velocityTexture.Write);
+        fluidSimulationCompute.SetTexture(6, "outDivergenceTexture", divergenceTexture);
+        fluidSimulationCompute.SetTexture(6, "outPressureTexture", pressureTexture.Write);
+        fluidSimulationCompute.SetTexture(6, "outVorticityTexture", vorticityTexture);
+
+        fluidSimulationCompute.Dispatch(6, simulationSizeX / (int)ThreadGroupSizeX, simulationSizeY / (int)ThreadGroupSizeY, 1);
+
+        velocityTexture.Swap();
+        componentTexture.Swap();
+        pressureTexture.Swap();
+
+        fluidSimulationCompute.SetTexture(6, "outComponentTexture", componentTexture.Write);
+        fluidSimulationCompute.SetTexture(6, "outVelocityTexture", velocityTexture.Write);
+        fluidSimulationCompute.SetTexture(6, "outDivergenceTexture", divergenceTexture);
+        fluidSimulationCompute.SetTexture(6, "outPressureTexture", pressureTexture.Write);
+        fluidSimulationCompute.SetTexture(6, "outVorticityTexture", vorticityTexture);
+
+        fluidSimulationCompute.Dispatch(6, simulationSizeX / (int)ThreadGroupSizeX, simulationSizeY / (int)ThreadGroupSizeY, 1);
+
+        velocityTexture.Swap();
+        componentTexture.Swap();
+        pressureTexture.Swap();
     }
     public void Simulate()
     {

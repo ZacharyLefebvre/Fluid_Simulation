@@ -4,6 +4,7 @@
 #pragma kernel CSProjection
 #pragma kernel CSVorticity
 #pragma kernel CSVorticityConfinement
+#pragma kernel CSInitialize
 
 #define THREADGROUP_X 16
 #define THREADGROUP_Y 16
@@ -369,4 +370,14 @@ void CSVorticityConfinement(uint3 id : SV_DispatchThreadID)
 	velocity += extraVelocity * vorticityIntensity;
 
 	outVelocityTexture[id.xy] = velocity;
+}
+
+[numthreads(THREADGROUP_X, THREADGROUP_Y, 1)]
+void CSInitialize(uint3 id : SV_DispatchThreadID)
+{
+	outComponentTexture[id.xy] = 0;
+	outVelocityTexture[id.xy] = 0.0.xx;
+	outPressureTexture[id.xy] = 0;
+	outDivergenceTexture[id.xy] = 0;
+	outVorticityTexture[id.xy] = 0;
 }

@@ -13,9 +13,14 @@ public class WaterRippleSimulation : MonoBehaviour
     private ComputeShader waterRippleCompute = null;
     private ParticlesSimulation particleSimulationScript = null;
     private FluidSimulation fluidSimulationScript = null;
-    void Start()
+    void OnEnable()
     {
         Initialize();
+    }
+
+    private void OnDestroy()
+    {
+        Uninitialize();
     }
 
     void Update()
@@ -41,12 +46,31 @@ public class WaterRippleSimulation : MonoBehaviour
         }
     }
 
-    private void Initialize()
+    public void Initialize()
     {
         waterRippleCompute = Resources.Load<ComputeShader>("WaterRipplesCompute");
         particleSimulationScript = GetComponent<ParticlesSimulation>();
         fluidSimulationScript = GetComponent<FluidSimulation>();
         waterRippleTexture = new SwappableRenderTexture(fluidSimulationScript.simulationSizeX, fluidSimulationScript.simulationSizeY, RenderTextureFormat.RHalf, TextureWrapMode.Clamp, FilterMode.Bilinear);
+    }
+
+    private void Uninitialize()
+    {
+        waterRippleTexture.Release();
+    }
+
+    public void OnRestart()
+    {
+        Uninitialize();
+        Initialize();
+
+        waterRippleCompute.SetTexture(1, "waterRippleWrite", waterRippleTexture.Write);
+        waterRippleCompute.Dispatch(1, Mathf.CeilToInt((float)fluidSimulationScript.simulationSizeX / (float)fluidSimulationScript.ThreadGroupSizeX), Mathf.CeilToInt((float)fluidSimulationScript.simulationSizeY / (float)fluidSimulationScript.ThreadGroupSizeY), 1);
+        waterRippleTexture.Swap();
+
+        waterRippleCompute.SetTexture(1, "waterRippleWrite", waterRippleTexture.Write);
+        waterRippleCompute.Dispatch(1, Mathf.CeilToInt((float)fluidSimulationScript.simulationSizeX / (float)fluidSimulationScript.ThreadGroupSizeX), Mathf.CeilToInt((float)fluidSimulationScript.simulationSizeY / (float)fluidSimulationScript.ThreadGroupSizeY), 1);
+        waterRippleTexture.Swap();
     }
 
     private bool MouseManagement(out Vector2 uvHit)

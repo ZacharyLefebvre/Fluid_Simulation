@@ -15918,6 +15918,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7ebdb7f7c421d2547a22cd648a6f7b0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  fluidSimulation: {fileID: 7627342966438500912}
+  particlesSimulation: {fileID: 7627342966438500915}
+  waterSimulation: {fileID: 7627342966438500916}
 --- !u!4 &1936020405 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4686351410737048, guid: 69b54264a2c33f9409434d043441552c,
@@ -18747,7 +18750,7 @@ MonoBehaviour:
   collisionTexture: {fileID: 2800000, guid: d5ec80b1ea8cbff4bb2b7c71689e18c2, type: 3}
   injectionForce: 209.7
   injectRadius: 0.01
-  dampening: 0.995
+  dampening: 0.997
   rippleSpeed: 2
   raycastLayerMask:
     serializedVersion: 2

@@ -3,10 +3,19 @@ using UnityEngine.SceneManagement;
 
 public class Controls : MonoBehaviour
 {
+    [SerializeField] private FluidSimulation fluidSimulation;
+    [SerializeField] private ParticlesSimulation particlesSimulation;
+    [SerializeField] private WaterRippleSimulation waterSimulation;
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Space))
-            SceneManager.LoadScene(0);
+        {
+            //SceneManager.LoadScene(0);
+
+            fluidSimulation.OnRestart();
+            particlesSimulation.OnRestart();
+            waterSimulation.OnRestart();
+        }
         
         if (Input.GetKeyDown(KeyCode.Escape))
         {

@@ -39,10 +39,10 @@ public class ParticlesSimulation : MonoBehaviour
     #region Unity Functions
     private void Awake()
     {
-        particleAmountSlider.onValueChanged.AddListener(UpdateParticleAmount);
+        GenerateNenuphars();
         Initialize();
-        nenupharAmountScript.UpdateText(activeParticlesCount);
     }
+
     private void Update()
     {
         Simulate();
@@ -50,25 +50,16 @@ public class ParticlesSimulation : MonoBehaviour
 
     private void OnDestroy()
     {
-        particleAmountSlider.onValueChanged.RemoveAllListeners();
-        particleTexture.Release();
+        Uninitialize();
     }
 
     #endregion
 
     #region Custom Functions
-    private void Initialize()
+
+    private void GenerateNenuphars()
     {
-        Camera.main.useOcclusionCulling = false;
-
         nenufarArray = new GameObject[MaxParticlesCount];
-        particlesCompute = Resources.Load<ComputeShader>("ParticleCompute");
-        particlesCompute.GetKernelThreadGroupSizes(0, out ThreadGroupSizeX, out ThreadGroupSizeY, out ThreadGroupSizeZ);
-        textureSize = new Vector2(simulationSizeX, simulationSizeY);
-        particleInvTextureSize = new Vector2(1.0f / (float)simulationSizeX, 1.0f / (float)simulationSizeY);
-
-        activeParticlesCount = (int)particleAmountSlider.value;
-
         for (int i = 0; i < MaxParticlesCount; i++)
         {
             int nenufarRoll = Random.Range(0, 101);
@@ -85,7 +76,7 @@ public class ParticlesSimulation : MonoBehaviour
                 if (j == nenufarPrefabs.Length - 1)
                     Debug.Log($"no percentage matching this number : {nenufarRoll}");
             }
-            
+
             // nenufarArray[i].transform.position += Vector3.up * (Random.value * 0.1f); // offset to avoid z-fighting
             MaterialPropertyBlock propertyBlock = new MaterialPropertyBlock();
             propertyBlock.SetFloat("_Id", (float)i);
@@ -104,6 +95,22 @@ public class ParticlesSimulation : MonoBehaviour
 
             nenufarArray[i].SetActive(i < activeParticlesCount);
         }
+    }
+
+    public void Initialize()
+    {
+        Camera.main.useOcclusionCulling = false;
+
+        particleAmountSlider.onValueChanged.AddListener(UpdateParticleAmount);
+        nenupharAmountScript.UpdateText(activeParticlesCount);
+
+        
+        particlesCompute = Resources.Load<ComputeShader>("ParticleCompute");
+        particlesCompute.GetKernelThreadGroupSizes(0, out ThreadGroupSizeX, out ThreadGroupSizeY, out ThreadGroupSizeZ);
+        textureSize = new Vector2(simulationSizeX, simulationSizeY);
+        particleInvTextureSize = new Vector2(1.0f / (float)simulationSizeX, 1.0f / (float)simulationSizeY);
+
+        activeParticlesCount = (int)particleAmountSlider.value;
 
         mainSimulationScript = GetComponent<FluidSimulation>();
         particleTexture = new SwappableRenderTexture(simulationSizeX, simulationSizeY, RenderTextureFormat.RGHalf, TextureWrapMode.Clamp, FilterMode.Point);
@@ -125,6 +132,19 @@ public class ParticlesSimulation : MonoBehaviour
         particlesCompute.Dispatch(1, Mathf.CeilToInt((float)simulationSizeX / (float)ThreadGroupSizeX), Mathf.CeilToInt((float)simulationSizeY / (float)ThreadGroupSizeY), 1);
         particleTexture.Swap();
         randomBuffer.Release();
+    }
+
+    private void Uninitialize()
+    {
+        particleAmountSlider.onValueChanged.RemoveAllListeners();
+        particleTexture.Release();
+    }
+
+    public void OnRestart()
+    {
+        Uninitialize();
+        Initialize();
+
     }
 
     private void Simulate()

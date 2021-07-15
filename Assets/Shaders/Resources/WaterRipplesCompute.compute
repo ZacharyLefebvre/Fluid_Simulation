@@ -1,4 +1,5 @@
 ﻿#pragma kernel CSRipple
+#pragma kernel CSInitialize
 
 Texture2D<float> waterRippleCollision;
 Texture2D<float> waterRippleRead;
@@ -28,4 +29,10 @@ void CSRipple (uint3 id : SV_DispatchThreadID)
     
     // Register result
     waterRippleWrite[id.xy] = (newValue * dampening) + injectMask;
+}
+
+[numthreads(16,16,1)]
+void CSInitialize (uint3 id : SV_DispatchThreadID)
+{
+    waterRippleWrite[id.xy] = 0;
 }
